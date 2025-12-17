@@ -14,9 +14,7 @@ export class EarningsService {
     return this.repo.save(data);
   }
 
-  findAll() {
-    return this.repo.find({ order: { earningsDate: 'DESC' } });
-  }
+  findAll() { return this.repo.find({ order: { createdAt: 'DESC' }, }); }
 
   update(id: number, data) {
     return this.repo.update(id, data);
