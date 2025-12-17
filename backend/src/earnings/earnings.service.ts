@@ -17,7 +17,7 @@ export class EarningsService {
 
   findAll() {
     return this.repo.find({
-      order: { earningsDate: 'ASC' },
+      order: { createdAt: 'DESC' },
     });
   }
 
