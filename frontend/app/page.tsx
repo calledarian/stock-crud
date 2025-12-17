@@ -17,7 +17,7 @@ export default function Home() {
     closePrice: "",
   });
 
-  const API_URL = "http://localhost:3000/earnings";
+  const API_URL = "http://localhost:3001/earnings";
 
   const fetchRecords = async () => {
     const res = await fetch(API_URL);
