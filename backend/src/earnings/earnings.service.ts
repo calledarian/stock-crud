@@ -38,27 +38,51 @@ export class EarningsService {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Earnings');
 
-    // Columns
     sheet.columns = [
-      { header: 'Stock', key: 'stockName', width: 12 },
       { header: 'Earnings Date', key: 'earningsDate', width: 15 },
       { header: 'Close Price', key: 'closePrice', width: 14 },
     ];
 
-    // Rows
-    records.forEach((r) => {
-      sheet.addRow({
-        stockName: r.stockName,
-        earningsDate: r.earningsDate,
-        closePrice: r.closePrice,
-      });
-    });
-
-    // Styling (optional but nice)
     sheet.getRow(1).font = { bold: true };
     sheet.views = [{ state: 'frozen', ySplit: 1 }];
+    sheet.getColumn('earningsDate').numFmt = 'yyyy-mm-dd';
+    sheet.getColumn('closePrice').numFmt = '$#,##0.00';
 
-    const arrayBuffer = await workbook.xlsx.writeBuffer();
-    return Buffer.from(arrayBuffer);
+    const grouped = records.reduce((acc, r) => {
+      acc[r.stockName] ??= [];
+      acc[r.stockName].push(r);
+      return acc;
+    }, {} as Record<string, typeof records>);
+
+    let rowIndex = 2;
+
+    Object.entries(grouped).forEach(([stock, rows]) => {
+      // Stock header row
+      sheet.mergeCells(`A${rowIndex}:B${rowIndex}`);
+      sheet.getCell(`A${rowIndex}`).value = stock;
+      sheet.getCell(`A${rowIndex}`).font = { bold: true };
+      rowIndex++;
+
+      // Sort dates inside stock
+      rows
+        .sort(
+          (a, b) =>
+            new Date(a.earningsDate).getTime() -
+            new Date(b.earningsDate).getTime(),
+        )
+        .forEach((r) => {
+          sheet.addRow({
+            earningsDate: new Date(r.earningsDate),
+            closePrice: r.closePrice,
+          });
+          rowIndex++;
+        });
+
+      rowIndex++; // blank line between stocks
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    return Buffer.from(buffer);
   }
+
 }

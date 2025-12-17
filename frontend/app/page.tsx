@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ExportButton from "./utils/ExportExcel";
 
 /* =======================
    Month helper
@@ -334,6 +335,7 @@ export default function Home() {
           >
             Save Record
           </button>
+          <ExportButton />
         </div>
 
         {/* Table */}
