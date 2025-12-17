@@ -262,7 +262,6 @@ export default function Home() {
           {/* Form Layout: 3 Inputs (Stock, Month, Day) and 2 combined sections (Year Buttons, Price) */}
           <div className="grid gap-4 md:grid-cols-5 items-start">
             
-            {/* 1. Stock Name */}
             <input
               placeholder="Stock (AAPL)"
               className="border px-3 py-2 rounded dark:bg-zinc-800 col-span-1 md:col-span-1"
@@ -272,15 +271,6 @@ export default function Home() {
               }
             />
 
-            {/* 2. Month Input */}
-            <input
-              placeholder="Month (Dec)"
-              className="border px-3 py-2 rounded dark:bg-zinc-800 col-span-1 md:col-span-1"
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-            />
-
-            {/* 3. Day Input (1-31) */}
             <input
               type="number"
               placeholder="Day (1-31)"
@@ -296,12 +286,18 @@ export default function Home() {
               }}
             />
 
-            {/* 4. Year Buttons (2020 - 2025) - Now spans 2 columns on small screens, but behaves like 1 block in the 5-column grid*/}
+            <input
+              placeholder="Month (Dec)"
+              className="border px-3 py-2 rounded dark:bg-zinc-800 col-span-1 md:col-span-1"
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+            />
+
+
             <div className="flex flex-wrap gap-2 col-span-full md:col-span-1 items-center">
               {ALLOWED_YEARS.map(y => <YearButton key={y} value={y} />)}
             </div>
 
-            {/* 5. Close Price */}
             <input
               type="number"
               step="0.01"
