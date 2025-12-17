@@ -172,6 +172,7 @@ export default function Home() {
       setForm({ stockName: form.stockName, earningsDate: "", closePrice: "" });
       setMonth("");
       setDay("");
+      setYear("");
       setError("");
 
       fetchRecords();
