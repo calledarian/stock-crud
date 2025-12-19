@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { Earnings } from './earnings.entity';
 import * as ExcelJS from 'exceljs';
 
@@ -83,6 +83,12 @@ export class EarningsService {
 
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);
+  }
+
+  async findByStockName(stockName: string) {
+    return this.repo.find({
+      where: { stockName: Like(`%${stockName}%`) },
+    });
   }
 
 }

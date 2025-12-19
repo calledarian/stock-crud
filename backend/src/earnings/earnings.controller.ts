@@ -53,4 +53,10 @@ export class EarningsController {
   remove(@Param('id') id) {
     return this.service.delete(+id);
   }
+
+  @Get('stock/:name')
+  findByStock(@Param('name') name: string) {
+    return this.service.findByStockName(name);
+  }
+
 }
