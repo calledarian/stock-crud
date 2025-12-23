@@ -40,6 +40,8 @@ const ITEMS_PER_PAGE = 50;
 export default function Home() {
   const API_URL = "http://localhost:3001/earnings";
 
+  const EXPORT_EXCEL = "http://localhost:3001/earnings/export/excel";
+
   const [records, setRecords] = useState<Earnings[]>([]);
   const [editing, setEditing] = useState<Earnings | null>(null);
   const [deleting, setDeleting] = useState<Earnings | null>(null);
@@ -161,7 +163,7 @@ export default function Home() {
       // Keep year selected
       setError("");
       fetchRecords();
-      
+
       // Focus back to stock input for next entry
       setTimeout(() => stockInputRef.current?.focus(), 100);
     } catch (e) {
@@ -170,6 +172,31 @@ export default function Home() {
     }
   };
 
+  const exportToExcel = async () => {
+    try {
+      const res = await fetch(EXPORT_EXCEL, {
+        method: "GET",
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to export");
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "earnings.xlsx";
+      document.body.appendChild(a);
+      a.click();
+
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Export failed:", err);
+    }
+  };
   /* ======================= Delete ======================= */
   const remove = async () => {
     if (!deleting) return;
@@ -258,11 +285,10 @@ export default function Home() {
   const YearButton = ({ value }: { value: string }) => (
     <button
       onClick={() => setYear(value)}
-      className={`flex-grow border px-3 py-2 rounded text-xs sm:text-sm transition-colors ${
-        year === value
-          ? "bg-blue-600 text-white border-blue-600"
-          : "bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700"
-      }`}
+      className={`flex-grow border px-3 py-2 rounded text-xs sm:text-sm transition-colors ${year === value
+        ? "bg-blue-600 text-white border-blue-600"
+        : "bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+        }`}
     >
       {value}
     </button>
@@ -348,11 +374,10 @@ export default function Home() {
                       <button
                         key={d}
                         onClick={() => setDay(d)}
-                        className={`h-9 text-xs rounded border transition-colors ${
-                          day === d
-                            ? "bg-blue-600 text-white border-blue-600 font-bold"
-                            : "bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700"
-                        }`}
+                        className={`h-9 text-xs rounded border transition-colors ${day === d
+                          ? "bg-blue-600 text-white border-blue-600 font-bold"
+                          : "bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                          }`}
                       >
                         {d}
                       </button>
@@ -369,11 +394,10 @@ export default function Home() {
                     <button
                       key={m.value}
                       onClick={() => setMonth(m.value)}
-                      className={`px-2 py-2 text-xs rounded border transition-colors ${
-                        month === m.value
-                          ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 font-bold"
-                          : "bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 border-zinc-300 dark:border-zinc-600"
-                      }`}
+                      className={`px-2 py-2 text-xs rounded border transition-colors ${month === m.value
+                        ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 font-bold"
+                        : "bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 border-zinc-300 dark:border-zinc-600"
+                        }`}
                     >
                       {m.label}
                     </button>
@@ -432,6 +456,25 @@ export default function Home() {
             className="px-4 py-2 border dark:border-zinc-700 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
           >
             Reset
+          </button>
+        </div>
+        <div className="flex gap-2">
+          <input
+            className="flex-grow bg-white dark:bg-zinc-800 border dark:border-zinc-700 rounded px-4 py-2"
+            placeholder="🔍 Filter by Stock Name..."
+            onChange={(e) => findByStockName(e.target.value.toUpperCase())}
+          />
+          <button
+            onClick={fetchRecords}
+            className="px-4 py-2 border rounded"
+          >
+            Reset
+          </button>
+          <button
+            onClick={exportToExcel}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          >
+            Export Excel
           </button>
         </div>
 
@@ -494,11 +537,10 @@ export default function Home() {
                 <button
                   onClick={goToPrevPage}
                   disabled={currentPage === 1}
-                  className={`px-3 py-1 rounded text-sm border dark:border-zinc-600 ${
-                    currentPage === 1
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-white dark:hover:bg-zinc-700"
-                  }`}
+                  className={`px-3 py-1 rounded text-sm border dark:border-zinc-600 ${currentPage === 1
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-white dark:hover:bg-zinc-700"
+                    }`}
                 >
                   Previous
                 </button>
@@ -508,11 +550,10 @@ export default function Home() {
                 <button
                   onClick={goToNextPage}
                   disabled={currentPage === totalPages}
-                  className={`px-3 py-1 rounded text-sm border dark:border-zinc-600 ${
-                    currentPage === totalPages
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-white dark:hover:bg-zinc-700"
-                  }`}
+                  className={`px-3 py-1 rounded text-sm border dark:border-zinc-600 ${currentPage === totalPages
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-white dark:hover:bg-zinc-700"
+                    }`}
                 >
                   Next
                 </button>
