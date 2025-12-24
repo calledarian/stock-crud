@@ -13,7 +13,7 @@ export class EarningsService {
   constructor(
     @InjectRepository(Earnings)
     private repo: Repository<Earnings>,
-  ) {}
+  ) { }
 
   create(data: CreateEarningsDto) {
     return this.repo.save(data);
@@ -103,5 +103,12 @@ export class EarningsService {
 
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);
+  }
+
+  async exists(stockName: string, earningsDate: string): Promise<boolean> {
+    const record = await this.repo.findOne({
+      where: { stockName, earningsDate },
+    });
+    return !!record;
   }
 }
