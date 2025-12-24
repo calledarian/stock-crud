@@ -4,7 +4,9 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
 } from 'typeorm';
+import { User } from '../users/users.entity';
 
 @Entity()
 export class Earnings {
@@ -19,6 +21,11 @@ export class Earnings {
 
   @Column('float')
   closePrice: number;
+
+  @ManyToOne(() => User, user => user.earnings, {
+    nullable: true,
+  })
+  user: User;
 
   @CreateDateColumn()
   createdAt: Date;

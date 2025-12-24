@@ -1,17 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
 import { Earnings } from './earnings.entity';
 import * as ExcelJS from 'exceljs';
+import { CreateEarningsDto, UpdateEarningsDto } from './dto/earning.dto';
 
 @Injectable()
 export class EarningsService {
   constructor(
     @InjectRepository(Earnings)
     private repo: Repository<Earnings>,
-  ) { }
+  ) {}
 
-  create(data) {
+  create(data: CreateEarningsDto) {
     return this.repo.save(data);
   }
 
@@ -21,17 +25,33 @@ export class EarningsService {
     });
   }
 
-  update(id: number, data) {
-    return this.repo.update(id, data);
+  async findByStockName(stockName: string) {
+    return this.repo.find({
+      where: { stockName: Like(`%${stockName}%`) },
+    });
   }
 
-  delete(id: number) {
-    return this.repo.delete(id);
+  async update(id: number, data: UpdateEarningsDto) {
+    const result = await this.repo.update(id, data);
+
+    if (result.affected === 0) {
+      throw new NotFoundException('Record not found');
+    }
+
+    return { message: 'Record updated successfully' };
   }
 
-  /* =======================
-     EXPORT TO EXCEL
-  ======================= */
+  async delete(id: number) {
+    const result = await this.repo.delete(id);
+
+    if (result.affected === 0) {
+      throw new NotFoundException('Record not found');
+    }
+
+    return { message: 'Record deleted successfully' };
+  }
+
+
   async exportToExcel(): Promise<Buffer> {
     const records = await this.findAll();
 
@@ -48,22 +68,22 @@ export class EarningsService {
     sheet.getColumn('earningsDate').numFmt = 'yyyy-mm-dd';
     sheet.getColumn('closePrice').numFmt = '$#,##0.00';
 
-    const grouped = records.reduce((acc, r) => {
-      acc[r.stockName] ??= [];
-      acc[r.stockName].push(r);
-      return acc;
-    }, {} as Record<string, typeof records>);
+    const grouped = records.reduce<Record<string, Earnings[]>>(
+      (acc, r) => {
+        acc[r.stockName] ??= [];
+        acc[r.stockName].push(r);
+        return acc;
+      },
+      {},
+    );
 
     let rowIndex = 2;
 
     Object.entries(grouped).forEach(([stock, rows]) => {
-      // Stock header row
       sheet.mergeCells(`A${rowIndex}:B${rowIndex}`);
       sheet.getCell(`A${rowIndex}`).value = stock;
       sheet.getCell(`A${rowIndex}`).font = { bold: true };
       rowIndex++;
-
-      // Sort dates inside stock
       rows
         .sort(
           (a, b) =>
@@ -78,17 +98,10 @@ export class EarningsService {
           rowIndex++;
         });
 
-      rowIndex++; // blank line between stocks
+      rowIndex++;
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);
   }
-
-  async findByStockName(stockName: string) {
-    return this.repo.find({
-      where: { stockName: Like(`%${stockName}%`) },
-    });
-  }
-
 }
