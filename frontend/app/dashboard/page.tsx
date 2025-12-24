@@ -40,8 +40,8 @@ const ITEMS_PER_PAGE = 50;
 
 export default function Home() {
   const router = useRouter();
-  const API_URL = "http://localhost:3001/earnings";
-  const EXPORT_EXCEL = "http://localhost:3001/earnings/export/excel";
+  const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/earnings`;
+  const EXPORT_EXCEL = `${process.env.NEXT_PUBLIC_API_URL}/earnings/export/excel`;
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [records, setRecords] = useState<Earnings[]>([]);

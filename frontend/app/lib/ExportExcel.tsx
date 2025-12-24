@@ -2,7 +2,7 @@
 
 export default function ExportButton() {
   const exportExcel = async () => {
-    const res = await fetch('http://localhost:3001/earnings/export/excel');
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/earnings/export/excel`);
 
     if (!res.ok) {
       alert('Export failed');

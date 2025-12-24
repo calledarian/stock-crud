@@ -12,7 +12,7 @@ interface User {
 
 export default function ManagementPage() {
   const router = useRouter();
-  const API_URL = "http://localhost:3001/users";
+  const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/users`;
 
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
