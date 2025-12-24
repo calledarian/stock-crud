@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -8,6 +8,7 @@ import { User } from './users/users.entity';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
+import { AdminBootstrapService } from './users/admin-bootstrap.service';
 
 @Module({
   imports: [
@@ -26,4 +27,12 @@ import { ConfigModule } from '@nestjs/config';
   ], controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule implements OnModuleInit {
+  constructor(
+    private readonly adminBootstrap: AdminBootstrapService,
+  ) {}
+
+  async onModuleInit() {
+    await this.adminBootstrap.bootstrap();
+  }
+}
