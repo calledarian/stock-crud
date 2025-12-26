@@ -29,6 +29,12 @@ export class EarningsController {
   }
 
   @UseGuards(AuthGuard)
+  @Get('stock-count')
+  stockCount() {
+    return this.service.stockCount();
+  }
+
+  @UseGuards(AuthGuard)
   @Get('export/excel')
   async exportExcel(@Res() res: Response) {
     const buffer = await this.service.exportToExcel();

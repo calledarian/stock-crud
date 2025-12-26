@@ -25,6 +25,14 @@ export class EarningsService {
     });
   }
 
+  stockCount() {
+    return this.repo
+      .createQueryBuilder('earnings')
+      .select('earnings.stockName')
+      .distinct(true)
+      .getCount();
+  }
+
   async findByStockName(stockName: string) {
     return this.repo.find({
       where: { stockName: Like(`%${stockName}%`) },

@@ -45,6 +45,7 @@ export default function Home() {
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [records, setRecords] = useState<Earnings[]>([]);
+  const [stockCount, setStockCount] = useState(0);
   const [editing, setEditing] = useState<Earnings | null>(null);
   const [deleting, setDeleting] = useState<Earnings | null>(null);
   const [error, setError] = useState("");
@@ -70,6 +71,7 @@ export default function Home() {
     } else {
       setIsLoading(false);
       fetchRecords();
+      stockCountFetch();
     }
   }, []);
 
@@ -128,6 +130,14 @@ export default function Home() {
     } catch (e) { console.error(e); }
   };
 
+  const stockCountFetch = async () => {
+    try {
+      const res = await authFetch(`${API_URL}/stock-count`);
+      const data = await res.json();
+      return setStockCount(data);
+    } catch (e) { console.error(e); return 0; }
+  };
+
   const submit = async () => {
     setError("");
     if (!form.stockName || !form.closePrice || !month || !day) {
@@ -141,7 +151,7 @@ export default function Home() {
         body: JSON.stringify({ stockName: form.stockName, earningsDate, closePrice: Number(form.closePrice) }),
       });
       setForm({ stockName: form.stockName, earningsDate: "", closePrice: "" });
-      setMonth(""); setDay(""); fetchRecords();
+      setMonth(""); setDay(""); fetchRecords(); stockCountFetch();
       setTimeout(() => stockInputRef.current?.focus(), 100);
     } catch (e) { setError("Save failed."); }
   };
@@ -160,6 +170,7 @@ export default function Home() {
     if (!deleting) return;
     await authFetch(`${API_URL}/${deleting.id}`, { method: "DELETE" });
     setDeleting(null); fetchRecords();
+    stockCountFetch();
   };
 
   const saveEdit = async () => {
@@ -170,6 +181,7 @@ export default function Home() {
       body: JSON.stringify({ stockName: editStock, earningsDate: editDate, closePrice: Number(editPrice) }),
     });
     setEditing(null); fetchRecords();
+    stockCountFetch();
   };
 
   const findByStockName = async (val: string) => {
@@ -300,7 +312,7 @@ export default function Home() {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-900 text-slate-500 border-b border-slate-800 uppercase tracking-widest text-[10px]">
               <tr>
-                <th className="p-4 font-bold">Equity</th>
+                <th className="p-4 font-bold">Stock Count: {stockCount}</th>
                 <th className="p-4 font-bold">Release</th>
                 <th className="p-4 font-bold text-right">Close</th>
                 <th className="p-4 font-bold text-center w-32">CMD</th>
