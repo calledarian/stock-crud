@@ -6,6 +6,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Earnings } from '../earnings/earnings.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity()
 export class User {
@@ -15,6 +16,7 @@ export class User {
   @Column({ unique: true })
   email: string;
 
+  @Exclude()
   @Column()
   passwordHash: string;
 
