@@ -28,9 +28,9 @@ export class EarningsService {
   stockCount() {
     return this.repo
       .createQueryBuilder('earnings')
-      .select('earnings.stockName')
-      .distinct(true)
-      .getCount();
+      .select('earnings.stockName', 'stockName')
+      .groupBy('earnings.stockName')
+      .getRawMany();
   }
 
   async findByStockName(stockName: string) {
