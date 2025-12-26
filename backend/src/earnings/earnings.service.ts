@@ -24,13 +24,13 @@ export class EarningsService {
       order: { createdAt: 'DESC' },
     });
   }
-
-  stockCount() {
-    return this.repo
+  async stockCount(): Promise<number> {
+    const result = await this.repo
       .createQueryBuilder('earnings')
-      .select('earnings.stockName', 'stockName')
-      .groupBy('earnings.stockName')
-      .getRawMany();
+      .select('COUNT(DISTINCT earnings.stockName)', 'count')
+      .getRawOne();
+
+    return Number(result.count);
   }
 
   async findByStockName(stockName: string) {
