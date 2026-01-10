@@ -24,10 +24,6 @@ export class CreateEarningsDto {
   updatedAt: string;
 
   @IsOptional()
-  @IsString()
-  userId?: string;
-
-  @IsOptional()
   @IsNumber()
   closePrior45d?: number;
 
@@ -64,10 +60,6 @@ export class UpdateEarningsDto {
   @IsOptional()
   @IsDateString()
   updatedAt?: string;
-
-  @IsOptional()
-  @IsString()
-  userId?: string;
 
   @IsOptional()
   @IsNumber()

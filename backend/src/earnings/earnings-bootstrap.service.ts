@@ -31,7 +31,6 @@ export class EarningsBootstrapService implements OnModuleInit {
                 closePrice: row.closePrice,
                 createdAt: row.createdAt ?? new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                userId: row.userId ?? '',
                 closePrior45d: row.closePrior45d ?? null,
                 closePrior30d: row.closePrior30d ?? null,
                 closePrior14d: row.closePrior14d ?? null,
