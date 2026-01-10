@@ -238,33 +238,28 @@ export class EarningsService {
     });
     return !!record;
   }
-  async updateByStockAndDate(stockName: string, earningsDate: string, dto: CreateEarningsDto) {
-    const {
-      closePrice,
-      closePrior45d,
-      closePrior30d,
-      closePrior14d,
-      closePrior1d,
-      datePrior45d,
-      datePrior30d,
-      datePrior14d,
-      datePrior1d,
-    } = dto;
-
-    return this.repo.update(
-      { stockName, earningsDate },
-      {
-        closePrice,
-        closePrior45d,
-        datePrior45d,
-        closePrior30d,
-        datePrior30d,
-        closePrior14d,
-        datePrior14d,
-        closePrior1d,
-        datePrior1d,
-        updatedAt: new Date(),
-      }
-    );
+async updateByStockAndDate(stockName: string, earningsDate: string, dto: CreateEarningsDto) {
+  const updated = await this.repo.update(
+    { stockName, earningsDate },
+    {
+      closePrice: dto.closePrice ?? null,
+      closePrior45d: dto.closePrior45d ?? undefined,
+      datePrior45d: dto.datePrior45d ?? undefined,
+      closePrior30d: dto.closePrior30d ?? undefined,
+      datePrior30d: dto.datePrior30d ?? undefined,
+      closePrior14d: dto.closePrior14d ?? undefined,
+      datePrior14d: dto.datePrior14d ?? undefined,
+      closePrior1d: dto.closePrior1d ?? undefined,
+      datePrior1d: dto.datePrior1d ?? undefined,
+      updatedAt: new Date(),
+    }
+  );
+  if (updated.affected === 0) {
+    console.warn(`No record updated for ${stockName} on ${earningsDate}`);
+  } else {
+    console.log(`Updated record for ${stockName} on ${earningsDate}`);
   }
+  return updated;
+}
+
 }
