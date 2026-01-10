@@ -238,4 +238,11 @@ export class EarningsService {
     });
     return !!record;
   }
+
+  async updateByStockAndDate(stockName: string, earningsDate: string, dto: CreateEarningsDto) {
+    return this.repo.update(
+      { stockName, earningsDate },
+      { ...dto, updatedAt: new Date() }
+    );
+  }
 }

@@ -29,12 +29,22 @@ export class EarningsBootstrapService implements OnModuleInit {
                 stockName: row.stockName,
                 earningsDate: new Date(row.earningsDate).toISOString(),
                 closePrice: row.closePrice,
+                createdAt: row.createdAt ?? new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                userId: row.userId ?? '',
+                closePrior45d: row.closePrior45d ?? null,
+                closePrior30d: row.closePrior30d ?? null,
+                closePrior14d: row.closePrior14d ?? null,
+                closePrior1d: row.closePrior1d ?? null,
             };
 
             const exists = await this.earningsService.exists(dto.stockName, dto.earningsDate);
+
             if (!exists) {
                 await this.earningsService.create(dto);
             } else {
+                // Update all fields for existing row
+                await this.earningsService.updateByStockAndDate(dto.stockName, dto.earningsDate, dto);
             }
         }
 

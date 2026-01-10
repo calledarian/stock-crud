@@ -14,6 +14,34 @@ export class CreateEarningsDto {
 
   @IsNumber()
   closePrice: number;
+
+  @IsOptional()
+  @IsDateString()
+  createdAt: string;
+
+  @IsOptional()
+  @IsDateString()
+  updatedAt: string;
+
+  @IsOptional()
+  @IsString()
+  userId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  closePrior45d?: number;
+
+  @IsOptional()
+  @IsNumber()
+  closePrior30d?: number;
+
+  @IsOptional()
+  @IsNumber()
+  closePrior14d?: number;
+
+  @IsOptional()
+  @IsNumber()
+  closePrior1d?: number;
 }
 
 export class UpdateEarningsDto {
@@ -28,4 +56,32 @@ export class UpdateEarningsDto {
   @IsOptional()
   @IsNumber()
   closePrice?: number;
+
+  @IsOptional()
+  @IsDateString()
+  createdAt?: string;
+
+  @IsOptional()
+  @IsDateString()
+  updatedAt?: string;
+
+  @IsOptional()
+  @IsString()
+  userId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  closePrior45d?: number;
+
+  @IsOptional()
+  @IsNumber()
+  closePrior30d?: number;
+
+  @IsOptional()
+  @IsNumber()
+  closePrior14d?: number;
+
+  @IsOptional()
+  @IsNumber()
+  closePrior1d?: number;
 }
