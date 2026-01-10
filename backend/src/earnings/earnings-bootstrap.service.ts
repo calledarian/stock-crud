@@ -34,9 +34,7 @@ export class EarningsBootstrapService implements OnModuleInit {
             const exists = await this.earningsService.exists(dto.stockName, dto.earningsDate);
             if (!exists) {
                 await this.earningsService.create(dto);
-                console.log(`Inserted: ${dto.stockName} | ${dto.earningsDate} | ${dto.closePrice}`);
             } else {
-                console.log(`Skipped (duplicate): ${dto.stockName} | ${dto.earningsDate}`);
             }
         }
 

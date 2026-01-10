@@ -1,12 +1,17 @@
 import {
   Injectable,
   NotFoundException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
 import { Earnings } from './earnings.entity';
 import * as ExcelJS from 'exceljs';
 import { CreateEarningsDto, UpdateEarningsDto } from './dto/earning.dto';
+import { join } from 'path';
+import { tmpdir } from 'os';
+import * as sqlite3 from 'sqlite3';
+import { promises as fs } from 'fs';
 
 @Injectable()
 export class EarningsService {
@@ -113,6 +118,57 @@ export class EarningsService {
     return Buffer.from(buffer);
   }
 
+  async exportToSqlite(): Promise<Buffer> {
+    const records = await this.findAll();
+    const tempFilePath = join(tmpdir(), `export-${Date.now()}.db`);
+    const db = new sqlite3.Database(tempFilePath);
+    try {
+      await new Promise<void>((resolve, reject) => {
+        db.serialize(() => {
+          db.run(`
+              CREATE TABLE earnings (
+                id INTEGER PRIMARY KEY,
+                stockName TEXT,
+                earningsDate TEXT,
+                closePrice REAL,
+                createdAt TEXT,
+                updatedAt TEXT
+              )
+            `);
+
+          const stmt = db.prepare(
+            `INSERT INTO earnings (stockName, earningsDate, closePrice, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?)`
+          );
+
+          for (const r of records) {
+            stmt.run(
+              r.stockName,
+              r.earningsDate,
+              r.closePrice,
+              r.createdAt?.toISOString(),
+              r.updatedAt?.toISOString()
+            );
+          }
+
+          stmt.finalize((err) => (err ? reject(err) : resolve()));
+        });
+      });
+
+      await new Promise<void>((resolve, reject) => {
+        db.close((err) => (err ? reject(err) : resolve()));
+      });
+
+      const buffer = await fs.readFile(tempFilePath);
+
+      await fs.unlink(tempFilePath).catch(() => { });
+
+      return buffer;
+    } catch (error) {
+      await fs.unlink(tempFilePath).catch(() => { });
+      console.error('SQLite Export Error:', error);
+      throw new InternalServerErrorException('Failed to generate database file');
+    }
+  }
   async exists(stockName: string, earningsDate: string): Promise<boolean> {
     const record = await this.repo.findOne({
       where: { stockName, earningsDate },

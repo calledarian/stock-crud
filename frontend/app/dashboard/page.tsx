@@ -42,6 +42,7 @@ export default function Home() {
   const router = useRouter();
   const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/earnings`;
   const EXPORT_EXCEL = `${process.env.NEXT_PUBLIC_API_URL}/earnings/export/excel`;
+  const EXPORT_SQLITE = `${process.env.NEXT_PUBLIC_API_URL}/earnings/export/sqlite`;
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [records, setRecords] = useState<Earnings[]>([]);
@@ -163,6 +164,15 @@ export default function Home() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url; a.download = "earnings.xlsx"; a.click();
+    } catch (err) { console.error("Export failed"); }
+  };
+  const exportToSqlite = async () => {
+    try {
+      const res = await authFetch(EXPORT_SQLITE);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "earnings.db"; a.click();
     } catch (err) { console.error("Export failed"); }
   };
 
@@ -305,6 +315,7 @@ export default function Home() {
           <input className="flex-grow bg-slate-900 border border-slate-800 rounded px-4 py-2 outline-none focus:border-blue-500 text-sm" placeholder="Search ticker..." onChange={(e) => findByStockName(e.target.value.toUpperCase())} />
           <button onClick={fetchRecords} className="px-4 py-2 bg-slate-800 border border-slate-700 rounded text-xs hover:bg-slate-700 transition-colors duration-75">Reset</button>
           <button onClick={exportToExcel} className="px-6 py-2 bg-emerald-700 text-white rounded font-bold text-xs hover:bg-emerald-600 transition-colors duration-75">Export</button>
+          <button onClick={exportToSqlite} className="px-6 py-2 bg-emerald-700 text-white rounded font-bold text-xs hover:bg-emerald-600 transition-colors duration-75">Export SQLite</button>
         </div>
 
         {/* Table */}

@@ -50,6 +50,23 @@ export class EarningsController {
 
     res.send(buffer);
   }
+
+  @UseGuards(AuthGuard)
+  @Get('export/sqlite')
+  async exportSqlite(@Res() res: Response) {
+    const buffer = await this.service.exportToSqlite();
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=earnings.db',
+    );
+
+    res.send(buffer);
+  }
   @UseGuards(AuthGuard, RolesGuard)
   @Put(':id')
   update(@Param('id') id, @Body() body) {
