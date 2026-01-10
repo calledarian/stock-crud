@@ -405,7 +405,25 @@ export default function Home() {
                     {isAdmin && (
                       <td className="px-6 py-5 text-center">
                         <div className="flex justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => { setEditing(r); setEditStock(r.stockName); setEditDate(r.earningsDate); setEditPrice(r.closePrice.toString()); }} className="text-indigo-400 font-black text-xs hover:text-white uppercase tracking-tighter">Edit</button>
+                          <button
+                            onClick={() => {
+                              setEditing(r);
+                              setEditStock(r.stockName);
+                              setEditDate(r.earningsDate);
+                              setEditPrice(r.closePrice.toString());
+                              setEditDate45(r.datePrior45d || "");
+                              setEditPrice45(r.closePrior45d?.toString() || "");
+                              setEditDate30(r.datePrior30d || "");
+                              setEditPrice30(r.closePrior30d?.toString() || "");
+                              setEditDate14(r.datePrior14d || "");
+                              setEditPrice14(r.closePrior14d?.toString() || "");
+                              setEditDate1(r.datePrior1d || "");
+                              setEditPrice1(r.closePrior1d?.toString() || "");
+                            }}
+                            className="text-indigo-400 font-black text-xs hover:text-white uppercase tracking-tighter"
+                          >
+                            Edit
+                          </button>                          
                           <button onClick={() => setDeleting(r)} className="text-red-500 font-black text-xs hover:text-white uppercase tracking-tighter">Purge</button>
                         </div>
                       </td>
