@@ -33,6 +33,16 @@ type Earnings = {
   stockName: string;
   earningsDate: string;
   closePrice: number;
+  closePrior45d: number | null;
+  datePrior45d: string | null;
+  closePrior30d: number | null;
+  datePrior30d: string | null;
+  closePrior14d: number | null;
+  datePrior14d: string | null;
+  closePrior1d: number | null;
+  datePrior1d: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 const ALLOWED_YEARS = ["2020", "2021", "2022", "2023", "2024", "2025"];
@@ -135,7 +145,7 @@ export default function Home() {
     try {
       const res = await authFetch(`${API_URL}/stock-count`);
       const data = await res.json();
-      return setStockCount(data);
+      setStockCount(data);
     } catch (e) { console.error(e); return 0; }
   };
 
@@ -166,6 +176,7 @@ export default function Home() {
       a.href = url; a.download = "earnings.xlsx"; a.click();
     } catch (err) { console.error("Export failed"); }
   };
+
   const exportToSqlite = async () => {
     try {
       const res = await authFetch(EXPORT_SQLITE);
@@ -179,8 +190,7 @@ export default function Home() {
   const remove = async () => {
     if (!deleting) return;
     await authFetch(`${API_URL}/${deleting.id}`, { method: "DELETE" });
-    setDeleting(null); fetchRecords();
-    stockCountFetch();
+    setDeleting(null); fetchRecords(); stockCountFetch();
   };
 
   const saveEdit = async () => {
@@ -190,8 +200,7 @@ export default function Home() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ stockName: editStock, earningsDate: editDate, closePrice: Number(editPrice) }),
     });
-    setEditing(null); fetchRecords();
-    stockCountFetch();
+    setEditing(null); fetchRecords(); stockCountFetch();
   };
 
   const findByStockName = async (val: string) => {
@@ -214,178 +223,226 @@ export default function Home() {
   const currentRecords = records.slice(indexOfFirstRecord, indexOfLastRecord);
   const totalPages = Math.ceil(records.length / ITEMS_PER_PAGE);
 
-  const YearButton = ({ value }: { value: string }) => (
-    <button
-      onClick={() => setYear(value)}
-      className={`flex-grow border px-3 py-2 rounded text-xs transition-colors duration-75 ${year === value
-        ? "bg-blue-600 text-white border-blue-600"
-        : "bg-slate-800 border-slate-700 hover:bg-slate-700"
-        }`}
-    >
-      {value}
-    </button>
-  );
-
   if (isLoading) return null;
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-200 p-6 font-mono">
-      <div className="max-w-5xl mx-auto space-y-8">
-        
-        {/* Header */}
-        <header className="flex justify-between items-end border-b pb-4 border-slate-800">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">Tracker</h1>
-            <p className="text-sm text-slate-500 mt-1 uppercase tracking-widest">Mainframe Entry • Ctrl+Enter to save</p>
-          </div>
-          <div className="flex gap-2">
+    <main className="min-h-screen bg-[#020617] text-slate-200 p-6 antialiased">
+      <div className="max-w-[1600px] mx-auto space-y-6">
+
+        {/* HEADER */}
+        <header className="flex justify-between items-center bg-slate-900 border border-slate-800 p-5 rounded-xl">
+          <h1 className="text-3xl font-black text-white tracking-tighter">EARNINGS DASHBOARD</h1>
+          <div className="flex gap-4">
             {isAdmin && (
-              <button onClick={() => router.push('/management')} className="text-sm bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded font-bold shadow-sm transition-colors duration-75">
-                Manage
+              <button onClick={() => router.push('/management')} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold transition-all shadow-lg shadow-indigo-500/20">
+                SYSTEM ADMIN
               </button>
             )}
-            <button onClick={logout} className="text-sm text-red-500 hover:text-red-400 font-bold border border-red-900/50 px-3 py-1 rounded transition-colors duration-75">
-              Logout
+            <button onClick={logout} className="px-6 py-2.5 border border-slate-700 hover:bg-slate-800 text-sm font-bold rounded-lg transition-all">
+              LOGOUT
             </button>
           </div>
         </header>
 
-        {/* Entry Form */}
-        <section className="bg-slate-900 border border-slate-800 p-6 rounded-lg shadow-sm">
-          <h2 className="text-sm font-bold mb-4 text-slate-400 uppercase tracking-tighter">Record</h2>
-          <div className="space-y-6">
-            <div className="flex gap-3">
-              <input
-                ref={stockInputRef}
-                className="w-40 bg-slate-950 border-b-2 border-slate-700 focus:border-blue-500 outline-none py-2 px-2 text-xl font-bold text-blue-400"
-                placeholder="TICKER"
-                value={form.stockName}
-                onChange={(e) => setForm({ ...form, stockName: e.target.value.toUpperCase() })}
-              />
-              <div className="flex gap-2 items-center flex-1">
-                <span className="text-2xl text-slate-600">$</span>
+        {/* ENTRY FORM */}
+        {isAdmin && (
+          <section className="bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+              <div className="space-y-3">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Ticker Symbol</label>
                 <input
-                  ref={priceInputRef}
-                  className="flex-1 bg-slate-950 border-b-2 border-slate-700 focus:border-blue-500 outline-none py-2 px-2 text-lg font-mono"
-                  placeholder="0.00"
-                  value={form.closePrice}
-                  onChange={(e) => setForm({ ...form, closePrice: e.target.value.replace(/[^0-9.]/g, '') })}
+                  ref={stockInputRef}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-5 py-4 text-2xl font-black text-indigo-400 outline-none focus:ring-2 focus:ring-indigo-500 transition-all uppercase"
+                  placeholder="SYMBOL"
+                  value={form.stockName}
+                  onChange={(e) => setForm({ ...form, stockName: e.target.value.toUpperCase() })}
                 />
-                <button onClick={addDotToPrice} className="px-3 py-1 bg-slate-800 border border-slate-700 rounded font-bold hover:bg-slate-700">.</button>
+              </div>
+              <div className="space-y-3">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Close Price</label>
+                <div className="flex gap-2">
+                  <input
+                    ref={priceInputRef}
+                    className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-5 py-4 text-2xl font-bold text-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                    placeholder="0.00"
+                    value={form.closePrice}
+                    onChange={(e) => setForm({ ...form, closePrice: e.target.value.replace(/[^0-9.]/g, '') })}
+                  />
+                  <button onClick={addDotToPrice} className="px-6 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-2xl font-bold transition-all">.</button>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <label className="text-[10px] text-slate-500 uppercase">Day</label>
-                <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="space-y-3">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Select Day</label>
+                <div className="grid grid-cols-7 gap-1.5">
                   {Array.from({ length: 31 }, (_, i) => (i + 1).toString()).map((d) => (
-                    <button key={d} onClick={() => setDay(d)} className={`h-8 text-[10px] rounded border transition-colors duration-75 ${day === d ? "bg-blue-600 text-white border-blue-600 font-bold" : "bg-slate-950 border-slate-800 hover:bg-slate-700"}`}>{d}</button>
+                    <button key={d} onClick={() => setDay(d)} className={`h-10 text-sm font-bold rounded-md border ${day === d ? "bg-indigo-600 text-white border-indigo-600 shadow-md" : "bg-slate-950 border-slate-800 hover:bg-slate-700"}`}>{d}</button>
                   ))}
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] text-slate-500 uppercase">Month</label>
-                <div className="grid grid-cols-4 gap-1">
-                  {MONTH_LABELS.map((m) => (
-                    <button key={m.value} onClick={() => setMonth(m.value)} className={`py-2 text-[10px] rounded border transition-colors duration-75 ${month === m.value ? "bg-slate-200 text-slate-900 font-bold" : "bg-slate-950 border-slate-800 hover:bg-slate-700"}`}>{m.label}</button>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] text-slate-500 uppercase">Year</label>
+              <div className="space-y-3">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Select Month</label>
                 <div className="grid grid-cols-3 gap-2">
-                  {ALLOWED_YEARS.map((y) => <YearButton key={y} value={y} />)}
+                  {MONTH_LABELS.map((m) => (
+                    <button key={m.value} onClick={() => setMonth(m.value)} className={`py-3 text-xs font-black rounded-md border uppercase transition-all ${month === m.value ? "bg-white text-slate-950 border-white" : "bg-slate-950 border-slate-800 hover:bg-slate-700"}`}>{m.label}</button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-3">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Select Year</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {ALLOWED_YEARS.map((y) => (
+                    <button key={y} onClick={() => setYear(y)} className={`py-3 text-sm font-black rounded-md border transition-all ${year === y ? "bg-indigo-600 text-white border-indigo-600" : "bg-slate-950 border-slate-800 hover:bg-slate-700"}`}>{y}</button>
+                  ))}
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-between items-center pt-4 border-t border-slate-800">
-              <div className="text-xs uppercase">
-                {form.earningsDate && !error && <span className="text-blue-500 font-bold tracking-widest">Active: {form.earningsDate}</span>}
-                {error && <span className="text-red-500">! {error}</span>}
+            <div className="flex justify-between items-center mt-8 pt-6 border-t border-slate-800">
+              <div className="flex flex-col">
+                <span className={`text-sm font-bold tracking-widest uppercase ${form.earningsDate ? "text-emerald-400" : "text-amber-500"}`}>
+                  {form.earningsDate ? `Ready: ${form.earningsDate}` : (error || "Pending Selection")}
+                </span>
               </div>
-              <button onClick={submit} disabled={!form.stockName || !form.closePrice || !form.earningsDate} className="bg-slate-200 text-slate-900 px-8 py-2 rounded font-black hover:bg-white disabled:opacity-20 transition-colors duration-75">Save Record</button>
+              <button 
+                onClick={submit} 
+                disabled={!form.stockName || !form.closePrice || !form.earningsDate} 
+                className="bg-white text-slate-950 px-12 py-4 rounded-xl text-lg font-black hover:bg-indigo-400 hover:text-white disabled:opacity-10 transition-all uppercase shadow-2xl"
+              >
+                COMMIT RECORD
+              </button>
+            </div>
+          </section>
+        )}
+
+        {/* SEARCH & EXPORT */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-grow">
+            <input 
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-6 py-4 text-lg outline-none focus:border-indigo-500 transition-all" 
+              placeholder="QUICK SEARCH BY TICKER..." 
+              onChange={(e) => findByStockName(e.target.value.toUpperCase())} 
+            />
+          </div>
+          <div className="flex gap-2">
+            <button onClick={fetchRecords} className="px-6 py-4 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-sm uppercase">Reset</button>
+            <button onClick={exportToExcel} className="px-6 py-4 bg-emerald-700/20 text-emerald-400 border border-emerald-800 hover:bg-emerald-700 hover:text-white rounded-xl font-bold text-sm uppercase transition-all">Export Excel</button>
+            <button onClick={exportToSqlite} className="px-6 py-4 bg-blue-700/20 text-blue-400 border border-blue-800 hover:bg-blue-700 hover:text-white rounded-xl font-bold text-sm uppercase transition-all">Export SQLite</button>
+          </div>
+        </div>
+
+        {/* MAIN DATA TABLE */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-800/80 border-b border-slate-700 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  <th className="px-6 py-5">Ticker ({stockCount})</th>
+                  <th className="px-2 py-5 text-center">45d</th>
+                  <th className="px-2 py-5 text-center">30d</th>
+                  <th className="px-2 py-5 text-center">14d</th>
+                  <th className="px-2 py-5 text-center">1d</th>
+                  <th className="px-6 py-5 text-right bg-indigo-950/40 text-indigo-200">Final Earnings</th>
+                  {isAdmin && <th className="px-6 py-5 text-center">Cmd</th>}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/50">
+                {currentRecords.map((r) => (
+                  <tr key={r.id} className="hover:bg-slate-800/30 transition-all group">
+                    <td className="px-6 py-5">
+                      <span className="text-2xl font-black text-white group-hover:text-indigo-400 transition-all">{r.stockName}</span>
+                    </td>
+                    
+                    {[
+                      { p: r.closePrior45d, d: r.datePrior45d },
+                      { p: r.closePrior30d, d: r.datePrior30d },
+                      { p: r.closePrior14d, d: r.datePrior14d },
+                      { p: r.closePrior1d, d: r.datePrior1d }
+                    ].map((item, i) => (
+                      <td key={i} className="px-2 py-5 text-center border-r border-slate-800/30">
+                        <div className="flex flex-col">
+                          <span className={`text-2xl font-bold ${!item.p ? 'text-slate-600' : 'text-slate-200'}`}>
+                            {item.p ? `$${Number(item.p).toFixed(2)}` : '—'}
+                          </span>
+                          <span className="text-lg font-bold text-slate-500 uppercase">{item.d || 'no data'}</span>
+                        </div>
+                      </td>
+                    ))}
+
+                    <td className="px-6 py-5 text-right bg-indigo-950/20">
+                      <div className="flex flex-col">
+                        <span className="text-2xl font-black text-emerald-400">${r.closePrice.toFixed(2)}</span>
+                        <span className="text-lg font-black text-indigo-400">{r.earningsDate}</span>
+                      </div>
+                    </td>
+
+                    {isAdmin && (
+                      <td className="px-6 py-5 text-center">
+                        <div className="flex justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => { setEditing(r); setEditStock(r.stockName); setEditDate(r.earningsDate); setEditPrice(r.closePrice.toString()); }} className="text-indigo-400 font-black text-xs hover:text-white uppercase tracking-tighter">Edit</button>
+                          <button onClick={() => setDeleting(r)} className="text-red-500 font-black text-xs hover:text-white uppercase tracking-tighter">Purge</button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* FOOTER / PAGINATION */}
+          <div className="p-6 bg-slate-950/50 flex justify-between items-center border-t border-slate-800">
+            <p className="text-xs font-black text-slate-500 uppercase tracking-widest">
+              Page {currentPage} of {totalPages}
+            </p>
+            <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Records: {indexOfFirstRecord + 1}-{Math.min(indexOfLastRecord, records.length)} / {records.length}</span>
+            <div className="flex gap-2">
+              <button 
+                disabled={currentPage === 1} 
+                onClick={() => setCurrentPage(p => p - 1)} 
+                className="px-6 py-2 bg-slate-800 hover:bg-indigo-600 rounded-lg text-xs font-black disabled:opacity-10 transition-all"
+              >
+                PREVIOUS
+              </button>
+              <button 
+                disabled={currentPage === totalPages} 
+                onClick={() => setCurrentPage(p => p + 1)} 
+                className="px-6 py-2 bg-slate-800 hover:bg-indigo-600 rounded-lg text-xs font-black disabled:opacity-10 transition-all"
+              >
+                NEXT
+              </button>
             </div>
           </div>
-        </section>
-
-        {/* Filter & Export */}
-        <div className="flex gap-2">
-          <input className="flex-grow bg-slate-900 border border-slate-800 rounded px-4 py-2 outline-none focus:border-blue-500 text-sm" placeholder="Search ticker..." onChange={(e) => findByStockName(e.target.value.toUpperCase())} />
-          <button onClick={fetchRecords} className="px-4 py-2 bg-slate-800 border border-slate-700 rounded text-xs hover:bg-slate-700 transition-colors duration-75">Reset</button>
-          <button onClick={exportToExcel} className="px-6 py-2 bg-emerald-700 text-white rounded font-bold text-xs hover:bg-emerald-600 transition-colors duration-75">Export</button>
-          <button onClick={exportToSqlite} className="px-6 py-2 bg-emerald-700 text-white rounded font-bold text-xs hover:bg-emerald-600 transition-colors duration-75">Export SQLite</button>
         </div>
 
-        {/* Table */}
-        <div className="border border-slate-800 rounded-lg overflow-hidden shadow-2xl">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-900 text-slate-500 border-b border-slate-800 uppercase tracking-widest text-[10px]">
-              <tr>
-                <th className="p-4 font-bold">Stock Count: {stockCount}</th>
-                <th className="p-4 font-bold">Release</th>
-                <th className="p-4 font-bold text-right">Close</th>
-                <th className="p-4 font-bold text-center w-32">CMD</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-900 bg-slate-950/50">
-              {currentRecords.map((r) => (
-                <tr key={r.id} className="hover:bg-blue-900/10 transition-colors duration-75">
-                  <td className="p-4 font-black text-blue-400">{r.stockName}</td>
-                  <td className="p-4 text-slate-500">{r.earningsDate}</td>
-                  <td className="p-4 text-right font-mono">${r.closePrice.toFixed(2)}</td>
-                  <td className="p-4 flex justify-center gap-4">
-                    <button onClick={() => { setEditing(r); setEditStock(r.stockName); setEditDate(r.earningsDate); setEditPrice(r.closePrice.toString()); }} className="text-blue-500 hover:text-blue-300">Edit</button>
-                    <button onClick={() => setDeleting(r)} className="text-red-500 hover:text-red-300">Del</button>
-                  </td>
-                </tr>
-              ))}
-              {records.length === 0 && (
-                <tr><td colSpan={4} className="p-12 text-center text-slate-600 italic">No mainframe records found.</td></tr>
-              )}
-            </tbody>
-          </table>
-
-          {/* Pagination */}
-          {records.length > 0 && (
-            <div className="flex items-center justify-between p-4 bg-slate-900 border-t border-slate-800">
-              <span className="text-[10px] text-slate-500 uppercase">Records: {indexOfFirstRecord + 1}-{Math.min(indexOfLastRecord, records.length)} / {records.length}</span>
-              <div className="flex gap-2">
-                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 rounded text-[10px] border border-slate-700 hover:bg-slate-800 disabled:opacity-30">Previous</button>
-                <span className="px-2 py-1 text-[10px]">Page {currentPage} / {totalPages}</span>
-                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 rounded text-[10px] border border-slate-700 hover:bg-slate-800 disabled:opacity-30">Next</button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Modals */}
+        {/* MODALS Restored */}
         {editing && (
-          <div className="fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 z-50">
-            <div className="bg-slate-900 p-6 rounded-lg w-full max-w-sm border border-slate-700 shadow-2xl">
-              <h3 className="text-sm font-bold uppercase text-blue-500 mb-4">Edit Entry</h3>
-              <div className="space-y-3">
-                <input className="w-full bg-slate-950 border border-slate-700 p-2 rounded text-blue-400 font-bold" value={editStock} onChange={(e) => setEditStock(e.target.value.toUpperCase())} />
-                <input className="w-full bg-slate-950 border border-slate-700 p-2 rounded" type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} />
-                <input className="w-full bg-slate-950 border border-slate-700 p-2 rounded font-mono" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
+          <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+            <div className="bg-slate-900 p-8 rounded-2xl w-full max-w-md border border-slate-700 shadow-2xl">
+              <h3 className="text-xl font-black uppercase text-indigo-400 mb-6">Modify Record</h3>
+              <div className="space-y-4">
+                <input className="w-full bg-slate-950 border border-slate-700 p-4 rounded-xl text-xl font-black text-white outline-none focus:border-indigo-500" value={editStock} onChange={(e) => setEditStock(e.target.value.toUpperCase())} />
+                <input className="w-full bg-slate-950 border border-slate-700 p-4 rounded-xl text-lg font-bold text-white outline-none" type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} />
+                <input className="w-full bg-slate-950 border border-slate-700 p-4 rounded-xl text-xl font-bold text-white outline-none" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
               </div>
-              <div className="flex justify-end gap-2 mt-6">
-                <button onClick={() => setEditing(null)} className="px-4 py-2 text-xs text-slate-500 uppercase">Abort</button>
-                <button onClick={saveEdit} className="px-4 py-2 bg-blue-600 text-white rounded text-xs font-bold uppercase">Commit</button>
+              <div className="flex justify-end gap-4 mt-8">
+                <button onClick={() => setEditing(null)} className="px-6 py-3 text-sm text-slate-500 font-black uppercase hover:text-white transition-all">Cancel</button>
+                <button onClick={saveEdit} className="px-8 py-3 bg-indigo-600 text-white rounded-xl text-sm font-black uppercase shadow-lg shadow-indigo-500/30 transition-all">Commit</button>
               </div>
             </div>
           </div>
         )}
 
         {deleting && (
-          <div className="fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 z-50">
-            <div className="bg-slate-900 p-8 rounded-lg w-full max-w-md border-t-4 border-red-600 shadow-2xl">
-              <h3 className="text-lg font-bold text-red-600 uppercase">Confirm Purge</h3>
-              <p className="text-slate-400 text-sm mt-2">Permanently delete record for <strong>{deleting.stockName}</strong>?</p>
-              <div className="flex justify-end gap-3 mt-8">
-                <button onClick={() => setDeleting(null)} className="px-4 py-2 text-xs text-slate-500 uppercase">Cancel</button>
-                <button onClick={remove} className="px-6 py-2 bg-red-600 text-white rounded text-xs font-bold uppercase">Confirm</button>
+          <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+            <div className="bg-slate-900 p-8 rounded-2xl w-full max-w-md border border-red-900 shadow-2xl text-center">
+              <h3 className="text-2xl font-black uppercase text-red-500 mb-2">Confirm Purge</h3>
+              <p className="text-slate-400 mb-8">This will permanently remove <strong>{deleting.stockName}</strong> from the database.</p>
+              <div className="flex justify-center gap-4">
+                <button onClick={() => setDeleting(null)} className="px-8 py-3 text-sm text-slate-500 font-black uppercase">Abort</button>
+                <button onClick={remove} className="px-10 py-3 bg-red-600 text-white rounded-xl text-sm font-black uppercase transition-all shadow-lg shadow-red-500/20">Delete Forever</button>
               </div>
             </div>
           </div>

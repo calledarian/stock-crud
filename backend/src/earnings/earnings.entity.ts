@@ -22,6 +22,30 @@ export class Earnings {
   @Column('float')
   closePrice: number;
 
+  @Column('float', { nullable: true })
+  closePrior45d: number;
+
+  @Column({ type: 'date', nullable: true })
+  datePrior45d: string;
+
+  @Column('float', { nullable: true })
+  closePrior30d: number;
+
+  @Column({ type: 'date', nullable: true })
+  datePrior30d: string;
+
+  @Column('float', { nullable: true })
+  closePrior14d: number;
+
+  @Column({ type: 'date', nullable: true })
+  datePrior14d: string;
+
+  @Column('float', { nullable: true })
+  closePrior1d: number;
+
+  @Column({ type: 'date', nullable: true })
+  datePrior1d: string;
+ 
   @ManyToOne(() => User, user => user.earnings, {
     nullable: true,
   })

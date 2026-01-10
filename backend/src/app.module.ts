@@ -18,7 +18,7 @@ import { EarningsBootstrapService } from './earnings/earnings-bootstrap.service'
     }),
     TypeOrmModule.forRoot({
       type: 'sqlite',
-      database: 'data.db',
+      database: 'data_enriched.db',
       entities: [Earnings, User], 
       synchronize: true,
     }),

@@ -17,7 +17,7 @@ import { RolesGuard } from 'src/auth/roles.guard';
 @Controller('earnings')
 export class EarningsController {
   constructor(private service: EarningsService) {}
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Post()
   create(@Body() body) {
     return this.service.create(body);
