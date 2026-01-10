@@ -74,6 +74,14 @@ export default function Home() {
   const [editStock, setEditStock] = useState("");
   const [editDate, setEditDate] = useState("");
   const [editPrice, setEditPrice] = useState("");
+  const [editDate45, setEditDate45] = useState("");
+  const [editPrice45, setEditPrice45] = useState("");
+  const [editDate30, setEditDate30] = useState("");
+  const [editPrice30, setEditPrice30] = useState("");
+  const [editDate14, setEditDate14] = useState("");
+  const [editPrice14, setEditPrice14] = useState("");
+  const [editDate1, setEditDate1] = useState("");
+  const [editPrice1, setEditPrice1] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -195,12 +203,28 @@ export default function Home() {
 
   const saveEdit = async () => {
     if (!editing) return;
+
     await authFetch(`${API_URL}/${editing.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stockName: editStock, earningsDate: editDate, closePrice: Number(editPrice) }),
+      body: JSON.stringify({
+        stockName: editStock,
+        earningsDate: editDate,
+        closePrice: Number(editPrice),
+        closePrior45d: editPrice45 ? Number(editPrice45) : null,
+        datePrior45d: editDate45 || null,
+        closePrior30d: editPrice30 ? Number(editPrice30) : null,
+        datePrior30d: editDate30 || null,
+        closePrior14d: editPrice14 ? Number(editPrice14) : null,
+        datePrior14d: editDate14 || null,
+        closePrior1d: editPrice1 ? Number(editPrice1) : null,
+        datePrior1d: editDate1 || null,
+      }),
     });
-    setEditing(null); fetchRecords(); stockCountFetch();
+
+    setEditing(null);
+    fetchRecords();
+    stockCountFetch();
   };
 
   const findByStockName = async (val: string) => {
@@ -306,9 +330,9 @@ export default function Home() {
                   {form.earningsDate ? `Ready: ${form.earningsDate}` : (error || "Pending Selection")}
                 </span>
               </div>
-              <button 
-                onClick={submit} 
-                disabled={!form.stockName || !form.closePrice || !form.earningsDate} 
+              <button
+                onClick={submit}
+                disabled={!form.stockName || !form.closePrice || !form.earningsDate}
                 className="bg-white text-slate-950 px-12 py-4 rounded-xl text-lg font-black hover:bg-indigo-400 hover:text-white disabled:opacity-10 transition-all uppercase shadow-2xl"
               >
                 COMMIT RECORD
@@ -320,10 +344,10 @@ export default function Home() {
         {/* SEARCH & EXPORT */}
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-grow">
-            <input 
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-6 py-4 text-lg outline-none focus:border-indigo-500 transition-all" 
-              placeholder="QUICK SEARCH BY TICKER..." 
-              onChange={(e) => findByStockName(e.target.value.toUpperCase())} 
+            <input
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-6 py-4 text-lg outline-none focus:border-indigo-500 transition-all"
+              placeholder="QUICK SEARCH BY TICKER..."
+              onChange={(e) => findByStockName(e.target.value.toUpperCase())}
             />
           </div>
           <div className="flex gap-2">
@@ -354,7 +378,7 @@ export default function Home() {
                     <td className="px-6 py-5">
                       <span className="text-2xl font-black text-white group-hover:text-indigo-400 transition-all">{r.stockName}</span>
                     </td>
-                    
+
                     {[
                       { p: r.closePrior45d, d: r.datePrior45d },
                       { p: r.closePrior30d, d: r.datePrior30d },
@@ -399,16 +423,16 @@ export default function Home() {
             </p>
             <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Records: {indexOfFirstRecord + 1}-{Math.min(indexOfLastRecord, records.length)} / {records.length}</span>
             <div className="flex gap-2">
-              <button 
-                disabled={currentPage === 1} 
-                onClick={() => setCurrentPage(p => p - 1)} 
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(p => p - 1)}
                 className="px-6 py-2 bg-slate-800 hover:bg-indigo-600 rounded-lg text-xs font-black disabled:opacity-10 transition-all"
               >
                 PREVIOUS
               </button>
-              <button 
-                disabled={currentPage === totalPages} 
-                onClick={() => setCurrentPage(p => p + 1)} 
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(p => p + 1)}
                 className="px-6 py-2 bg-slate-800 hover:bg-indigo-600 rounded-lg text-xs font-black disabled:opacity-10 transition-all"
               >
                 NEXT
@@ -423,9 +447,58 @@ export default function Home() {
             <div className="bg-slate-900 p-8 rounded-2xl w-full max-w-md border border-slate-700 shadow-2xl">
               <h3 className="text-xl font-black uppercase text-indigo-400 mb-6">Modify Record</h3>
               <div className="space-y-4">
-                <input className="w-full bg-slate-950 border border-slate-700 p-4 rounded-xl text-xl font-black text-white outline-none focus:border-indigo-500" value={editStock} onChange={(e) => setEditStock(e.target.value.toUpperCase())} />
-                <input className="w-full bg-slate-950 border border-slate-700 p-4 rounded-xl text-lg font-bold text-white outline-none" type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} />
-                <input className="w-full bg-slate-950 border border-slate-700 p-4 rounded-xl text-xl font-bold text-white outline-none" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
+                <input
+                  className="w-full bg-slate-950 border border-slate-700 p-4 rounded-xl text-xl font-black text-white outline-none focus:border-indigo-500"
+                  value={editStock}
+                  onChange={(e) => setEditStock(e.target.value.toUpperCase())}
+                />
+                <input
+                  className="w-full bg-slate-950 border border-slate-700 p-4 rounded-xl text-lg font-bold text-white outline-none"
+                  type="date"
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                />
+                <input
+                  className="w-full bg-slate-950 border border-slate-700 p-4 rounded-xl text-xl font-bold text-white outline-none"
+                  value={editPrice}
+                  onChange={(e) => setEditPrice(e.target.value)}
+                />
+
+                {/* NEW FIELDS */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-black text-slate-400 uppercase">45d Date</label>
+                    <input type="date" value={editDate45} onChange={(e) => setEditDate45(e.target.value)} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-white" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-black text-slate-400 uppercase">45d Price</label>
+                    <input type="number" value={editPrice45} onChange={(e) => setEditPrice45(e.target.value)} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-white" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-black text-slate-400 uppercase">30d Date</label>
+                    <input type="date" value={editDate30} onChange={(e) => setEditDate30(e.target.value)} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-white" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-black text-slate-400 uppercase">30d Price</label>
+                    <input type="number" value={editPrice30} onChange={(e) => setEditPrice30(e.target.value)} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-white" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-black text-slate-400 uppercase">14d Date</label>
+                    <input type="date" value={editDate14} onChange={(e) => setEditDate14(e.target.value)} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-white" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-black text-slate-400 uppercase">14d Price</label>
+                    <input type="number" value={editPrice14} onChange={(e) => setEditPrice14(e.target.value)} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-white" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-black text-slate-400 uppercase">1d Date</label>
+                    <input type="date" value={editDate1} onChange={(e) => setEditDate1(e.target.value)} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-white" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-black text-slate-400 uppercase">1d Price</label>
+                    <input type="number" value={editPrice1} onChange={(e) => setEditPrice1(e.target.value)} className="w-full bg-slate-950 border border-slate-700 p-2 rounded-lg text-white" />
+                  </div>
+                </div>
               </div>
               <div className="flex justify-end gap-4 mt-8">
                 <button onClick={() => setEditing(null)} className="px-6 py-3 text-sm text-slate-500 font-black uppercase hover:text-white transition-all">Cancel</button>
