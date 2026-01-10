@@ -17,17 +17,20 @@ import { EarningsBootstrapService } from './earnings/earnings-bootstrap.service'
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({
-      type: 'sqlite',
-      database: 'data_enriched.db',
-      entities: [Earnings, User], 
-      synchronize: true,
+      type: 'postgres',
+      url: process.env.DATABASE_URL, 
+      entities: [Earnings, User],
+      synchronize: true, // Set to false in production to prevent data loss
+      ssl: {
+        rejectUnauthorized: false, // Required for Render self-signed certificates
+      },
     }),
     EarningsModule,
     UsersModule,
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService], // EarningsBootstrapService
+  providers: [AppService, EarningsBootstrapService], // EarningsBootstrapService
 })
 export class AppModule implements OnModuleInit {
   constructor(
