@@ -9,9 +9,9 @@ export class EarningsBootstrapService implements OnModuleInit {
     constructor(private readonly earningsService: EarningsService) { }
 
     async onModuleInit() {
-        console.log('EarningsBootstrapService: reading data.db...');
+        console.log('EarningsBootstrapService: reading data_enriched.db...');
 
-        const dbPath = path.resolve(__dirname, '../../data.db');
+        const dbPath = path.resolve(__dirname, '../../data_enriched.db');
         const db = new Database(dbPath);
 
         // Fetch all SQLite records
