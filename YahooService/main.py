@@ -45,33 +45,32 @@ class EarningsEnrichment:
         
         self.conn.commit()
     
-    def get_prior_trading_data(self, target_date: datetime, 
-                              historical_data: pd.DataFrame) -> Tuple[Optional[float], Optional[str]]:
+    def get_prior_trading_data(
+        self,
+        target_date: datetime,
+        historical_data: pd.DataFrame
+    ) -> Tuple[Optional[float], str]:
         """
-        Finds the closing price and the actual trading date used.
-        If target_date is a weekend/holiday, searches BACKWARDS (up to 7 days) 
-        to find the most recent trading day (e.g., the Friday before).
-        
-        Returns: (Price, DateString)
+        ALWAYS returns a date.
+        Price may be None.
         """
         target_date_obj = target_date.date()
-        
-        # Search backwards up to 7 days
+
+        resolved_date = target_date_obj
+
         for i in range(7):
             check_date = target_date_obj - timedelta(days=i)
-            
-            # Filter historical data for this specific date
+
             matching_rows = historical_data[
                 historical_data.index.date == check_date
             ]
-            
+
             if not matching_rows.empty:
                 price = round(matching_rows['Close'].iloc[0], 2)
-                actual_date = check_date.strftime('%Y-%m-%d')
-                return price, actual_date
-        
-        return None, None
-    
+                return price, check_date.strftime('%Y-%m-%d')
+
+        return None, resolved_date.strftime('%Y-%m-%d')
+
     def fetch_historical_prices(self, stock_name: str, 
                                earliest_date: str) -> pd.DataFrame:
         """
