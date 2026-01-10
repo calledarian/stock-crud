@@ -20,7 +20,7 @@ import { EarningsBootstrapService } from './earnings/earnings-bootstrap.service'
       type: 'postgres',
       url: process.env.DATABASE_URL, 
       entities: [Earnings, User],
-      synchronize: false, // Set to false in production to prevent data loss
+      synchronize: true, // Set to false in production to prevent data loss
       ssl: {
         rejectUnauthorized: false, // Required for Render self-signed certificates
       },
