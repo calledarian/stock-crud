@@ -53,7 +53,7 @@ class EarningsEnrichment:
         hist = historical_data[historical_data.index.date <= target_date.date()]
         
         if hist.empty:
-            return None, target_date.strftime('%Y-%m-%d')
+            return None, None
         
         # Take the **most recent trading day**
         last_row = hist.iloc[-1]
