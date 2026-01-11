@@ -69,48 +69,7 @@ export class EarningsService {
     const workbook = new ExcelJS.Workbook();
 
     // ========================================
-    // 1. SUMMARY SHEET
-    // ========================================
-    const summary = workbook.addWorksheet('Summary');
-    const total = records.length;
-
-    const stockStats = records.reduce<Record<string, { total: number; missing: number }>>((acc, r) => {
-      if (!acc[r.stockName]) acc[r.stockName] = { total: 0, missing: 0 };
-      acc[r.stockName].total++;
-
-      if (!r.closePrior45d || !r.closePrior30d || !r.closePrior14d || !r.closePrior1d) {
-        acc[r.stockName].missing++;
-      }
-      return acc;
-    }, {});
-
-    summary.columns = [
-      { header: 'Metric / Stock Name', key: 'metric', width: 40 },
-      { header: 'Status / Missing Count', key: 'value', width: 30 },
-    ];
-
-    summary.getRow(1).font = { bold: true };
-    summary.addRow({ metric: 'Total Earnings Records', value: total });
-
-    const stocksWithIssues = Object.entries(stockStats)
-      .filter(([_, s]) => s.missing > 0)
-      .sort((a, b) => b[1].missing - a[1].missing);
-
-    summary.addRow({ metric: 'Stocks with Missing Data', value: stocksWithIssues.length });
-    summary.addRow({ metric: '', value: '' });
-
-    if (stocksWithIssues.length > 0) {
-      const headerRow = summary.addRow({ metric: 'STOCK NAME', value: 'INCOMPLETE RECORDS' });
-      headerRow.font = { bold: true };
-      headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } };
-
-      stocksWithIssues.forEach(([stock, stats]) => {
-        summary.addRow({ metric: stock, value: `${stats.missing} out of ${stats.total}` });
-      });
-    }
-
-    // ========================================
-    // 2. DATA SHEET (Order matching requested image)
+    // DATA SHEET ONLY
     // ========================================
     const sheet = workbook.addWorksheet('Earnings Data');
 
@@ -133,7 +92,9 @@ export class EarningsService {
     sheet.getRow(1).font = { bold: true };
     sheet.getRow(1).alignment = { horizontal: 'center' };
 
-    // Apply specific Date and Currency formatting to columns
+    // Apply specific Date and Currency formatting to columns by Letter
+    // B=45dDate, D=30dDate, F=14dDate, H=1dDate, J=EarnDate
+    // C=45dPrice, E=30dPrice, G=14dPrice, I=1dPrice, K=EarnPrice
     const dateCols = ['B', 'D', 'F', 'H', 'J'];
     const priceCols = ['C', 'E', 'G', 'I', 'K'];
 
@@ -158,7 +119,6 @@ export class EarningsService {
         closePrice: r.closePrice,
       });
 
-      // Highlight missing prices in Yellow
       priceCols.slice(0, 4).forEach((colLetter, index) => {
         const val = [r.closePrior45d, r.closePrior30d, r.closePrior14d, r.closePrior1d][index];
         if (val == null) {
@@ -174,6 +134,7 @@ export class EarningsService {
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);
   }
+
   async exportToSqlite(): Promise<Buffer> {
     const records = await this.findAll();
     const tempFilePath = join(tmpdir(), `export-${Date.now()}.db`);
@@ -238,4 +199,28 @@ export class EarningsService {
     });
     return !!record;
   }
+  async updateByStockAndDate(stockName: string, earningsDate: string, dto: CreateEarningsDto) {
+    const updated = await this.repo.update(
+      { stockName, earningsDate },
+      {
+        closePrice: dto.closePrice ?? null,
+        closePrior45d: dto.closePrior45d ?? undefined,
+        datePrior45d: dto.datePrior45d ?? undefined,
+        closePrior30d: dto.closePrior30d ?? undefined,
+        datePrior30d: dto.datePrior30d ?? undefined,
+        closePrior14d: dto.closePrior14d ?? undefined,
+        datePrior14d: dto.datePrior14d ?? undefined,
+        closePrior1d: dto.closePrior1d ?? undefined,
+        datePrior1d: dto.datePrior1d ?? undefined,
+        updatedAt: new Date(),
+      }
+    );
+    if (updated.affected === 0) {
+      console.warn(`No record updated for ${stockName} on ${earningsDate}`);
+    } else {
+      console.log(`Updated record for ${stockName} on ${earningsDate}`);
+    }
+    return updated;
+  }
+
 }
