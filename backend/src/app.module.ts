@@ -30,7 +30,7 @@ import { EarningsBootstrapService } from './earnings/earnings-bootstrap.service'
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService], // EarningsBootstrapService
+  providers: [AppService, EarningsBootstrapService], // EarningsBootstrapService
 })
 export class AppModule implements OnModuleInit {
   constructor(
